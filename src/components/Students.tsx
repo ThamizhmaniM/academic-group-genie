@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
-import { useStudents, useSubjects, useCreateStudent, useUpdateStudent, useDeleteStudent } from '@/hooks/useStudents';
+import { useStudents, useSubjects, useCreateStudent, useUpdateStudent, useDeleteStudent, Student } from '@/hooks/useStudents';
 import { useToast } from '@/hooks/use-toast';
 
 const Students = () => {
@@ -20,14 +20,18 @@ const Students = () => {
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState(null);
-  const [formData, setFormData] = useState({
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    class: '11' | '12' | '';
+    subjects: string[];
+  }>({
     name: '',
     class: '',
     subjects: [],
   });
 
-  const handleSubjectChange = (subjectId, checked) => {
+  const handleSubjectChange = (subjectId: string, checked: boolean) => {
     if (checked) {
       setFormData(prev => ({
         ...prev,
@@ -41,15 +45,24 @@ const Students = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.class || (formData.class !== '11' && formData.class !== '12')) {
+      toast({
+        title: "Error",
+        description: "Please select a valid class",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       if (editingStudent) {
         await updateStudent.mutateAsync({
           id: editingStudent.id,
           name: formData.name,
-          studentClass: formData.class,
+          studentClass: formData.class as '11' | '12',
           subjectIds: formData.subjects,
         });
         toast({
@@ -59,7 +72,7 @@ const Students = () => {
       } else {
         await createStudent.mutateAsync({
           name: formData.name,
-          studentClass: formData.class,
+          studentClass: formData.class as '11' | '12',
           subjectIds: formData.subjects,
         });
         toast({
@@ -71,7 +84,7 @@ const Students = () => {
       setFormData({ name: '', class: '', subjects: [] });
       setEditingStudent(null);
       setIsAddDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -80,7 +93,7 @@ const Students = () => {
     }
   };
 
-  const getGroupName = (subjectCodes) => {
+  const getGroupName = (subjectCodes: string[]) => {
     const codeSet = new Set(subjectCodes);
     if (codeSet.has('MATH') && codeSet.has('PHY') && codeSet.has('CHEM')) {
       if (codeSet.has('BIO')) return 'PCB';
@@ -90,24 +103,24 @@ const Students = () => {
     return 'Custom';
   };
 
-  const handleEdit = (student) => {
+  const handleEdit = (student: Student) => {
     setEditingStudent(student);
     setFormData({
       name: student.name,
-      class: student.class,
+      class: student.class as '11' | '12',
       subjects: student.subjects.map(s => s.id),
     });
     setIsAddDialogOpen(true);
   };
 
-  const handleDelete = async (studentId) => {
+  const handleDelete = async (studentId: string) => {
     try {
       await deleteStudent.mutateAsync(studentId);
       toast({
         title: "Success",
         description: "Student deleted successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -158,7 +171,7 @@ const Students = () => {
                 <Label htmlFor="class">Class</Label>
                 <Select 
                   value={formData.class} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, class: value }))}
+                  onValueChange={(value: '11' | '12') => setFormData(prev => ({ ...prev, class: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select class" />
@@ -177,7 +190,7 @@ const Students = () => {
                       <Checkbox
                         id={subject.id}
                         checked={formData.subjects.includes(subject.id)}
-                        onCheckedChange={(checked) => handleSubjectChange(subject.id, checked)}
+                        onCheckedChange={(checked) => handleSubjectChange(subject.id, !!checked)}
                       />
                       <Label htmlFor={subject.id} className="text-sm">{subject.name}</Label>
                     </div>
