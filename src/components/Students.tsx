@@ -7,39 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useStudents, useSubjects, useCreateStudent, useUpdateStudent, useDeleteStudent } from '@/hooks/useStudents';
+import { useToast } from '@/hooks/use-toast';
 
 const Students = () => {
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      name: 'Rahul Sharma',
-      class: '11',
-      subjects: ['Mathematics', 'Physics', 'Chemistry'],
-      group: 'PCM',
-    },
-    {
-      id: 2,
-      name: 'Priya Patel',
-      class: '11',
-      subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology'],
-      group: 'PCB',
-    },
-    {
-      id: 3,
-      name: 'Amit Kumar',
-      class: '12',
-      subjects: ['Mathematics', 'Physics', 'Chemistry', 'Computer Science'],
-      group: 'CS',
-    },
-    {
-      id: 4,
-      name: 'Sneha Gupta',
-      class: '12',
-      subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology'],
-      group: 'PCB',
-    },
-  ]);
+  const { data: students = [], isLoading: studentsLoading } = useStudents();
+  const { data: subjects = [], isLoading: subjectsLoading } = useSubjects();
+  const createStudent = useCreateStudent();
+  const updateStudent = useUpdateStudent();
+  const deleteStudent = useDeleteStudent();
+  const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -49,56 +27,64 @@ const Students = () => {
     subjects: [],
   });
 
-  const availableSubjects = [
-    'Mathematics',
-    'Physics',
-    'Chemistry',
-    'Biology',
-    'Computer Science',
-    'English',
-    'Hindi',
-  ];
-
-  const handleSubjectChange = (subject, checked) => {
+  const handleSubjectChange = (subjectId, checked) => {
     if (checked) {
       setFormData(prev => ({
         ...prev,
-        subjects: [...prev.subjects, subject]
+        subjects: [...prev.subjects, subjectId]
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        subjects: prev.subjects.filter(s => s !== subject)
+        subjects: prev.subjects.filter(s => s !== subjectId)
       }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingStudent) {
-      setStudents(prev => prev.map(student => 
-        student.id === editingStudent.id 
-          ? { ...student, ...formData, group: getGroupName(formData.subjects) }
-          : student
-      ));
+    
+    try {
+      if (editingStudent) {
+        await updateStudent.mutateAsync({
+          id: editingStudent.id,
+          name: formData.name,
+          studentClass: formData.class,
+          subjectIds: formData.subjects,
+        });
+        toast({
+          title: "Success",
+          description: "Student updated successfully",
+        });
+      } else {
+        await createStudent.mutateAsync({
+          name: formData.name,
+          studentClass: formData.class,
+          subjectIds: formData.subjects,
+        });
+        toast({
+          title: "Success",
+          description: "Student created successfully",
+        });
+      }
+      
+      setFormData({ name: '', class: '', subjects: [] });
       setEditingStudent(null);
-    } else {
-      const newStudent = {
-        id: Date.now(),
-        ...formData,
-        group: getGroupName(formData.subjects),
-      };
-      setStudents(prev => [...prev, newStudent]);
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
-    setFormData({ name: '', class: '', subjects: [] });
-    setIsAddDialogOpen(false);
   };
 
-  const getGroupName = (subjects) => {
-    const subjectSet = new Set(subjects);
-    if (subjectSet.has('Mathematics') && subjectSet.has('Physics') && subjectSet.has('Chemistry')) {
-      if (subjectSet.has('Biology')) return 'PCB';
-      if (subjectSet.has('Computer Science')) return 'CS';
+  const getGroupName = (subjectCodes) => {
+    const codeSet = new Set(subjectCodes);
+    if (codeSet.has('MATH') && codeSet.has('PHY') && codeSet.has('CHEM')) {
+      if (codeSet.has('BIO')) return 'PCB';
+      if (codeSet.has('CS')) return 'CS';
       return 'PCM';
     }
     return 'Custom';
@@ -109,14 +95,34 @@ const Students = () => {
     setFormData({
       name: student.name,
       class: student.class,
-      subjects: student.subjects,
+      subjects: student.subjects.map(s => s.id),
     });
     setIsAddDialogOpen(true);
   };
 
-  const handleDelete = (studentId) => {
-    setStudents(prev => prev.filter(student => student.id !== studentId));
+  const handleDelete = async (studentId) => {
+    try {
+      await deleteStudent.mutateAsync(studentId);
+      toast({
+        title: "Success",
+        description: "Student deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
+
+  if (studentsLoading || subjectsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -166,14 +172,14 @@ const Students = () => {
               <div>
                 <Label>Subjects</Label>
                 <div className="grid grid-cols-2 gap-2 mt-2">
-                  {availableSubjects.map(subject => (
-                    <div key={subject} className="flex items-center space-x-2">
+                  {subjects.map(subject => (
+                    <div key={subject.id} className="flex items-center space-x-2">
                       <Checkbox
-                        id={subject}
-                        checked={formData.subjects.includes(subject)}
-                        onCheckedChange={(checked) => handleSubjectChange(subject, checked)}
+                        id={subject.id}
+                        checked={formData.subjects.includes(subject.id)}
+                        onCheckedChange={(checked) => handleSubjectChange(subject.id, checked)}
                       />
-                      <Label htmlFor={subject} className="text-sm">{subject}</Label>
+                      <Label htmlFor={subject.id} className="text-sm">{subject.name}</Label>
                     </div>
                   ))}
                 </div>
@@ -182,7 +188,10 @@ const Students = () => {
                 <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
+                  {(createStudent.isPending || updateStudent.isPending) && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
                   {editingStudent ? 'Update' : 'Add'} Student
                 </Button>
               </div>
@@ -216,17 +225,17 @@ const Students = () => {
                       <div className="flex flex-wrap gap-1">
                         {student.subjects.map(subject => (
                           <span
-                            key={subject}
+                            key={subject.id}
                             className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
                           >
-                            {subject}
+                            {subject.name}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="p-2">
                       <span className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded">
-                        {student.group}
+                        {getGroupName(student.subjects.map(s => s.code))}
                       </span>
                     </td>
                     <td className="p-2">
@@ -242,8 +251,13 @@ const Students = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDelete(student.id)}
+                          disabled={deleteStudent.isPending}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {deleteStudent.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </td>

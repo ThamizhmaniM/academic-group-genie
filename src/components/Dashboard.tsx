@@ -1,20 +1,33 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Calendar, CheckSquare } from 'lucide-react';
+import { Users, BookOpen, Calendar, CheckSquare, Loader2 } from 'lucide-react';
+import { useStudents } from '@/hooks/useStudents';
+import { useGroups } from '@/hooks/useGroups';
 
 const Dashboard = () => {
+  const { data: students = [], isLoading: studentsLoading } = useStudents();
+  const { data: groups = [], isLoading: groupsLoading } = useGroups();
+
+  if (studentsLoading || groupsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   const stats = [
     {
       title: 'Total Students',
-      value: '248',
+      value: students.length.toString(),
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Subject Groups',
-      value: '12',
+      value: groups.length.toString(),
       icon: BookOpen,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
@@ -37,24 +50,24 @@ const Dashboard = () => {
 
   const recentActivity = [
     {
-      action: 'New student enrolled',
-      student: 'Rahul Sharma - Class 11',
-      time: '2 hours ago',
+      action: 'Student Management',
+      student: `${students.length} students enrolled`,
+      time: 'Active',
     },
     {
-      action: 'Timetable updated',
-      student: 'Group A - PCM',
-      time: '4 hours ago',
+      action: 'Subject Groups',
+      student: `${groups.length} groups created`,
+      time: 'Auto-generated',
     },
     {
-      action: 'Test scheduled',
-      student: 'Mathematics - Class 12',
-      time: '1 day ago',
+      action: 'Database Integration',
+      student: 'All modules connected',
+      time: 'Just now',
     },
     {
-      action: 'Attendance marked',
-      student: 'Class 11 - All students',
-      time: '1 day ago',
+      action: 'System Ready',
+      student: 'Ready for timetable generation',
+      time: 'Now',
     },
   ];
 
@@ -112,13 +125,13 @@ const Dashboard = () => {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>System Status</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{activity.action}</p>
                     <p className="text-sm text-gray-600">{activity.student}</p>

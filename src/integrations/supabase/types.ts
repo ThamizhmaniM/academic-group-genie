@@ -9,16 +9,318 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      attendance: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          student_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          student_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_students: {
+        Row: {
+          created_at: string | null
+          group_id: string | null
+          id: string
+          student_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          student_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_students_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "subject_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_subjects: {
+        Row: {
+          group_id: string | null
+          id: string
+          subject_id: string | null
+        }
+        Insert: {
+          group_id?: string | null
+          id?: string
+          subject_id?: string | null
+        }
+        Update: {
+          group_id?: string | null
+          id?: string
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_subjects_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "subject_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_subjects: {
+        Row: {
+          created_at: string | null
+          id: string
+          student_id: string | null
+          subject_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          student_id?: string | null
+          subject_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          student_id?: string | null
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_subjects_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          class: Database["public"]["Enums"]["student_class"]
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          class: Database["public"]["Enums"]["student_class"]
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          class?: Database["public"]["Enums"]["student_class"]
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subject_groups: {
+        Row: {
+          class: Database["public"]["Enums"]["student_class"]
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          class: Database["public"]["Enums"]["student_class"]
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          class?: Database["public"]["Enums"]["student_class"]
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      test_schedules: {
+        Row: {
+          created_at: string | null
+          end_time: string
+          group_id: string | null
+          id: string
+          start_time: string
+          subject_id: string | null
+          test_date: string
+          test_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_time: string
+          group_id?: string | null
+          id?: string
+          start_time: string
+          subject_id?: string | null
+          test_date: string
+          test_name: string
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string
+          group_id?: string | null
+          id?: string
+          start_time?: string
+          subject_id?: string | null
+          test_date?: string
+          test_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_schedules_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "subject_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_schedules_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetables: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          group_id: string | null
+          id: string
+          subject_id: string | null
+          teacher_name: string | null
+          time_slot: number
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          group_id?: string | null
+          id?: string
+          subject_id?: string | null
+          teacher_name?: string | null
+          time_slot: number
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          group_id?: string | null
+          id?: string
+          subject_id?: string | null
+          teacher_name?: string | null
+          time_slot?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetables_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "subject_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetables_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      assign_student_to_group: {
+        Args: { student_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      attendance_status: "present" | "absent"
+      student_class: "11" | "12"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +435,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      attendance_status: ["present", "absent"],
+      student_class: ["11", "12"],
+    },
   },
 } as const
